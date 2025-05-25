@@ -43,7 +43,7 @@ class Maze:
     def __animate(self):
         if self.__win:
             self.__win.redraw()
-        #sleep(0.00001)
+        sleep(0.001)
 
     def __reset_cells_visited(self):
         for col in self.__cells:
@@ -135,10 +135,10 @@ class Maze:
             self.__break_walls_r(target_i, target_j)
 
     def _solve_i(self, i, j):
-        stack = [(i,j)]
+        stack = [(i,j,None, None)]
         while stack:
             self.__animate()
-            i,j = stack.pop()
+            i,j,k,l = stack[-1]
             self.__cells[i][j].visited = True
             if i == self.num_cols-1 and j == self.num_rows-1:
                 return True
@@ -163,8 +163,14 @@ class Maze:
             for d in directions:
                 if d[0]:
                     self.__cells[i][j].draw_move(self.__cells[d[1]][d[2]])
-                    stack.append((d[1],d[2]))
+                    stack.append((d[1],d[2],i,j))
                     # all possible moves on the stack
+            if all([d[0] is False for d in directions]):
+                # no valid moves got added: undo this route
+                if k is not None:
+                    self.__cells[i][j].draw_move(self.__cells[k][l], True)
+                stack.pop()
+
                 #self.__cells[i][j].draw_move(self.__cells[d[1]][d[2]],True)
         return False
 
