@@ -1,56 +1,13 @@
 #!/usr/bin/env python3
 
-from tkinter import Tk, Canvas
-
-class Point:
-    def __init__(self, x: int, y:int):
-        self.x = x
-        self.y = y
-
-class Line:
-    def __init__(self, a: Point, b: Point):
-        self.a = a
-        self.b = b
-    def draw(self, canvas, fill_color):
-        canvas.create_line(self.a.x, self.a.y, self.b.x, self.b.y, fill=fill_color, width=2)
-
-class Window:
-    def __init__(self, width: int, height: int):
-        self.width = width
-        self.height = height
-        self.__root = Tk()
-        self.__root.title("Maze Solver")
-        self.__root.geometry(f"{width}x{height}")
-        self.__canvas = Canvas(self.__root)
-        self.__canvas.pack()
-        self.running = False
-        self.__root.protocol("WM_DELETE_WINDOW", self.close)
-
-    def redraw(self):
-        self.__root.update_idletasks()
-        self.__root.update()
-
-    def wait_for_close(self):
-        self.running = True
-        while self.running:
-            self.redraw()
-
-    def close(self):
-        self.running = False
-
-    def draw_line(self, line: Line, fill_color="black"):
-        line.draw(self.__canvas, fill_color)
+from graphics import Window
+from maze import Maze
 
 def main():
-    win = Window(500, 500)
-    l1 = Line(
-        Point(100, 100), Point(400,100)
-    )
-    l2 = Line(
-        Point(100,100), Point(600,600)
-    )
-    win.draw_line(l1)
-    win.draw_line(l2, fill_color="red")
+    win = Window(800, 600)
+    # margins of 50 => 700x500 effectively
+    maze = Maze(50,50,22,30,25,25,win,250)
+    maze.solve()
     win.wait_for_close()
 
 main()
