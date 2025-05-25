@@ -24,7 +24,7 @@ class Maze:
             random.seed(seed)
         self.__create_cells()
         self.__break_entrance_and_exit()
-        self.__break_walls_r(0,0)
+        self.__break_walls_i(0,0)
         self.__reset_cells_visited()
 
     def __create_cells(self):
@@ -43,7 +43,7 @@ class Maze:
     def __animate(self):
         if self.__win:
             self.__win.redraw()
-        sleep(0.00001)
+        #sleep(0.00001)
 
     def __reset_cells_visited(self):
         for col in self.__cells:
@@ -56,6 +56,46 @@ class Maze:
         i,j = self.num_cols-1, self.num_rows-1
         self.__cells[i][j].has_bottom_wall = False
         self.__draw_cell(i,j)
+
+    def __break_walls_i(self, i, j):
+        stack = [(i,j)]
+        while stack:
+            i,j = stack[-1]
+            self.__cells[i][j].visited = True
+            possible_directions = []
+            # try going left
+            if i > 0 and not self.__cells[i-1][j].visited:
+                possible_directions.append("left")
+            # now right
+            if i < self.num_cols-1 and not self.__cells[i+1][j].visited:
+                possible_directions.append("right")
+            if j > 0 and not self.__cells[i][j-1].visited:
+                possible_directions.append("up")
+            if j < self.num_rows-1 and not self.__cells[i][j+1].visited:
+                possible_directions.append("down")
+            if len(possible_directions) == 0:
+                stack.pop()
+                continue
+            direction = possible_directions[random.randrange(len(possible_directions))]
+            if direction == "left":
+                self.__cells[i][j].has_left_wall = False
+                self.__cells[i-1][j].has_right_wall = False
+                target_i, target_j = i-1, j
+            elif direction == "right":
+                self.__cells[i][j].has_right_wall = False
+                self.__cells[i+1][j].has_left_wall = False
+                target_i, target_j = i+1, j
+            elif direction == "up":
+                self.__cells[i][j].has_top_wall = False
+                self.__cells[i][j-1].has_bottom_wall = False
+                target_i, target_j = i, j-1
+            else:
+                self.__cells[i][j].has_bottom_wall = False
+                self.__cells[i][j+1].has_top_wall = False
+                target_i, target_j = i, j+1
+            self.__draw_cell(i,j)
+            self.__draw_cell(target_i, target_j)
+            stack.append((target_i, target_j))
 
     def __break_walls_r(self, i, j):
         self.__cells[i][j].visited = True
@@ -94,6 +134,41 @@ class Maze:
             self.__draw_cell(target_i, target_j)
             self.__break_walls_r(target_i, target_j)
 
+    def _solve_i(self, i, j):
+        stack = [(i,j)]
+        while stack:
+            self.__animate()
+            i,j = stack.pop()
+            self.__cells[i][j].visited = True
+            if i == self.num_cols-1 and j == self.num_rows-1:
+                return True
+            directions = [
+                [
+                    i > 0 and not self.__cells[i][j].has_left_wall and not self.__cells[i-1][j].visited,
+                    i-1, j
+                ],
+                [
+                    i < self.num_cols-1 and not self.__cells[i][j].has_right_wall and not self.__cells[i+1][j].visited,
+                    i+1, j
+                ],
+                [
+                    j > 0 and not self.__cells[i][j].has_top_wall and not self.__cells[i][j-1].visited,
+                    i, j-1
+                ],
+                [
+                    j < self.num_rows-1 and not self.__cells[i][j].has_bottom_wall and not self.__cells[i][j+1].visited,
+                    i, j+1
+                ]
+            ]
+            for d in directions:
+                if d[0]:
+                    self.__cells[i][j].draw_move(self.__cells[d[1]][d[2]])
+                    stack.append((d[1],d[2]))
+                    # all possible moves on the stack
+                #self.__cells[i][j].draw_move(self.__cells[d[1]][d[2]],True)
+        return False
+
+
     def _solve_r(self, i: int, j: int):
         self.__animate()
         self.__cells[i][j].visited = True
@@ -130,4 +205,4 @@ class Maze:
         return False
 
     def solve(self):
-        return self._solve_r(0,0)
+        return self._solve_i(0,0)
